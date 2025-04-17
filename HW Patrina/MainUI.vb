@@ -394,6 +394,20 @@ Public Class MainUI
 
             If My.Computer.FileSystem.FileExists(param1) Then
                 Dim InputBuffer As Byte() = My.Computer.FileSystem.ReadAllBytes(param1)
+
+                If InputBuffer(0) = &H67 And InputBuffer(1) = &H66 And InputBuffer(2) = &H63 And InputBuffer(3) = &H71 Then
+                    Dim _loc_31 As Byte() = New Byte(InputBuffer.Length - 33) {}
+                    Array.Copy(InputBuffer, 32, _loc_31, 0, InputBuffer.Length - 32)
+                    Dim _loc_32 As Byte() = New Byte(3) {}
+                    Array.Copy(InputBuffer, 4, _loc_32, 0, 4)
+                    Dim Ctce8PayloadCRC As String = BytesToHex(_loc_32)
+                    If Not BytesToHex(CRC32(_loc_31)) = Ctce8PayloadCRC Or Not BitConverter.ToInt32(InputBuffer, 8) = _loc_31.Length Then
+                        ResultFail()
+                        Exit Sub
+                    End If
+                    InputBuffer = UnGZip(_loc_31)
+                End If
+
                 If InputBuffer(0) = &H1 Or InputBuffer(0) = &H2 Then
                     Dim _loc_1 As Byte() = New Byte(3) {}
                     Array.Copy(InputBuffer, 4, _loc_1, 0, 4)
@@ -433,7 +447,7 @@ Public Class MainUI
                         ResultFail()
                         Exit Sub
                     End If
-                ElseIf InputBuffer(0) = &H3 Then
+                ElseIf InputBuffer(0) = &H3 And False Then
                     RenameConfig(param1)
                     My.Computer.FileSystem.WriteAllBytes(param1, GetCtce8File(InputBuffer), False)
                     ResultOK()
